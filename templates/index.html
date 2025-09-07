@@ -166,22 +166,35 @@
         });
 
         function displayFeedback(feedback) {
-            let html = '';
-            // Helper function to create a list section
-            const createSection = (title, points, color) => {
-                if (!points || points.length === 0) return '';
-                let listItems = points.map(p => `<li class="mb-1">${p}</li>`).join('');
+            const renderSection = (title, content, color) => {
+                if (!content) return '';
+
+                // If backend sends an HTML string, inject it as-is (no extra <ul>).
+                // If it sends an array, render a list here.
+                const bodyHtml =
+                typeof content === 'string'
+                    ? content
+                    : `<ul class="list-disc list-inside text-gray-700">
+                        ${content.map(p => `<li class="mb-1">${p}</li>`).join('')}
+                    </ul>`;
+
                 return `
-                    <div class="mb-4">
-                        <h3 class="text-xl font-semibold text-${color}-600 mb-2">${title}</h3>
-                        <ul class="list-disc list-inside text-gray-700">${listItems}</ul>
-                    </div>
+                <div class="mb-4">
+                    <h3 class="text-xl font-semibold text-${color}-600 mb-2">${title}</h3>
+                    <div class="text-gray-700">${bodyHtml}</div>
+                </div>
                 `;
             };
-            html += createSection('Here is the feedback for your resume:', feedback.review, 'blue');
+
+            let html = '';
+            html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
+            html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
+            html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
+            html += renderSection('Things which can be improved:', feedback.improvements, 'red');
 
             feedbackResults.innerHTML = html;
-        }
+            }
+
 
 
     </script>

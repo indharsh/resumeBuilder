@@ -58,13 +58,14 @@ def getFeedbackFromGroq(prompt, resumeData):
             max_completion_tokens=8192,
             top_p= 0.80,
             reasoning_effort="medium",
-            stream=True,
+            stream=False,
             stop=None
         )
+        print(f"[DEBUG] Groq response: {response}")
         return response.choices[0].message.content
     except Exception as e:
         print(f"Error getting feedback from Groq: {e}")
-        return {"error": "Failed to get feedback from Groq."}
+        return {"error": "Failed to get feedback from Groq."}  
 
 
 
@@ -111,6 +112,7 @@ def rate_resume():
     if 'resume' not in request.files:
         return jsonify({'error':'No file found'}), 400
 
+
     file = request.files['resume']
     userPrompt = request.form.get('userPrompt', '')
 
@@ -122,9 +124,10 @@ def rate_resume():
     # You can now process the file (e.g., save it, analyze it, etc.)
     print(f"[DEBUG] Received file: {file.filename}, type: {type(file)}")
     pdfData = extractTextFromPDF(file)
-    print(f"[DEBUG] Extracted PDF data: {pdfData}")  # Print first 200 chars for brevity
     llm_response = getFeedbackFromGroq(userPrompt, pdfData)
-    return jsonify({"review": [llm_response]}), 200
+    print(f"[DEBUG] LLM Response: {llm_response}")
+    llm_response = json.loads(llm_response)
+    return jsonify({"summary": [llm_response['summary']], "veryGoodReview": [llm_response['veryGoodReview']], "moderateReview": [llm_response['moderateReview']], "improvements": [llm_response['improvements']] }), 200
 
 
 # This is a standard Python construct. 
