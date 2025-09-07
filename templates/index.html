@@ -1,204 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Assistant</title>
-    <!-- We'll use Tailwind CSS for styling to make it look clean and modern. -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Simple animation for showing/hiding sections */
-        .section-fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Resume Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .section-fade-in { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Improve list readability */
+    #feedbackResults ul { list-style: disc; margin-left: 1.5rem; }
+    #feedbackResults li { margin-bottom: 0.4rem; }
+    #feedbackResults p { margin-bottom: 0.6rem; }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
 
-    <div class="container mx-auto p-4 max-w-4xl">
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
-            
-            <!-- Header Section -->
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-gray-900">AI Resume Assistant</h1>
-                <p class="text-gray-500 mt-2">Create a professional resume with AI or get feedback on your existing one.</p>
-            </header>
+  <div class="container mx-auto p-4 max-w-4xl">
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
+      
+      <!-- Header Section -->
+      <header class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-gray-900">AI Resume Assistant</h1>
+        <p class="text-gray-500 mt-2">Create a professional resume with AI or get feedback on your existing one.</p>
+      </header>
 
-            <!-- Main Menu (This is the first thing the user sees) -->
-            <main id="mainMenu" class="text-center section-fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Option 1: Create Resume -->
-                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
-                        <h2 class="text-2xl font-semibold mb-3 text-indigo-600">Create Your Resume</h2>
-                        <p class="text-gray-600 mb-6">Answer a few questions and let our AI craft a tailored resume for you from scratch.</p>
-                        <button onclick="showView('createResumeView')" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
-                            Get Started
-                        </button>
-                    </div>
-                    <!-- Option 2: Rate Resume -->
-                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
-                        <h2 class="text-2xl font-semibold mb-3 text-teal-600">Rate Your Resume</h2>
-                        <p class="text-gray-600 mb-6">Upload your resume to get detailed feedback & suggestions for improvement.</p>
-                        <button onclick="showView('rateResumeView')" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors">
-                            Upload & Review
-                        </button>
-                    </div>
-                </div>
-            </main>
-
-            <!-- View 1: Create Resume (Initially hidden) -->
-            <div id="createResumeView" class="hidden section-fade-in">
-                <button onclick="showView('mainMenu')" class="mb-6 text-indigo-600 hover:underline">&larr; Back to Main Menu</button>
-                <h2 class="text-2xl font-semibold mb-4 text-center">Resume Creation Chat</h2>
-                <div class="border rounded-lg p-4 h-96 flex flex-col bg-gray-50">
-                    <!-- Chat messages will appear here -->
-                    <div id="chatbox" class="flex-grow overflow-y-auto mb-4 p-2 space-y-4">
-                         <div class="p-3 rounded-lg bg-indigo-100 text-indigo-800 self-start max-w-lg">
-                            <strong>AI Assistant:</strong><br>Hello! Please describe the kind of resume you'd like to create. For example, "Create a resume for a junior software developer with skills in Python, Java, and SQL, focusing on project experience."
-                        </div>
-                    </div>
-                    <!-- Chat input -->
-                    <div class="flex">
-                        <input type="text" id="userInput" class="w-full px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Describe your desired resume...">
-                        <button id="sendMessage" class="bg-indigo-600 text-white font-semibold px-6 py-2 rounded-r-lg hover:bg-indigo-700">&rarr;</button>
-                    </div>
-                </div>
-                 <div id="create-loader" class="text-center mt-4 hidden">
-                    <p>Generating your resume PDF... Please wait.</p>
-                </div>
-            </div>
-
-            <!-- View 2: Rate Resume (Initially hidden) -->
-            <div id="rateResumeView" class="hidden section-fade-in">
-                 <button onclick="showView('mainMenu')" class="mb-6 text-teal-600 hover:underline">&larr; Back to Main Menu</button>
-                <h2 class="text-2xl font-semibold mb-4 text-center">Get Feedback on Your Resume</h2>
-                <div class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-                    <p class="mb-4 text-gray-500">Upload your resume (PDF format)</p>
-                    <input type="file" id="resumeUpload" class="hidden" accept=".pdf">
-                    <button onclick="document.getElementById('resumeUpload').click()" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700">
-                        Choose File
-                    </button>
-                    <p id="fileName" class="mt-2 text-sm text-gray-600"></p>
-                </div>
-                <div id="rate-loader" class="text-center mt-4 hidden">
-                    <p>Analyzing your resume... Please wait.</p>
-                </div>
-                <!-- Feedback results will be displayed here -->
-                <div id="feedbackResults" class="mt-6 hidden">
-                    <!-- JS will populate this section -->
-                </div>
-            </div>
-
+      <!-- Main Menu -->
+      <main id="mainMenu" class="text-center section-fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Create Resume -->
+          <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
+            <h2 class="text-2xl font-semibold mb-3 text-indigo-600">Create Your Resume</h2>
+            <p class="text-gray-600 mb-6">Answer a few questions and let AI craft a tailored resume for you.</p>
+            <button onclick="showView('createResumeView')" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
+              Get Started
+            </button>
+          </div>
+          <!-- Rate Resume -->
+          <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
+            <h2 class="text-2xl font-semibold mb-3 text-teal-600">Rate Your Resume</h2>
+            <p class="text-gray-600 mb-6">Upload your resume to get detailed feedback & suggestions for improvement.</p>
+            <button onclick="showView('rateResumeView')" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors">
+              Upload & Review
+            </button>
+          </div>
         </div>
+      </main>
+
+      <!-- View: Create Resume -->
+      <div id="createResumeView" class="hidden section-fade-in">
+        <button onclick="showView('mainMenu')" class="mb-6 text-indigo-600 hover:underline">&larr; Back</button>
+        <h2 class="text-2xl font-semibold mb-4 text-center">Resume Creation Chat</h2>
+        <div class="border rounded-lg p-4 h-96 flex flex-col bg-gray-50">
+          <div id="chatbox" class="flex-grow overflow-y-auto mb-4 p-2 space-y-4">
+            <div class="p-3 rounded-lg bg-indigo-100 text-indigo-800 self-start max-w-lg">
+              <strong>AI Assistant:</strong><br>Hello! Describe the kind of resume you’d like me to generate.
+            </div>
+          </div>
+          <div class="flex">
+            <input type="text" id="userInput" class="w-full px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Describe your desired resume...">
+            <button id="sendMessage" class="bg-indigo-600 text-white font-semibold px-6 py-2 rounded-r-lg hover:bg-indigo-700">&rarr;</button>
+          </div>
+        </div>
+        <div id="create-loader" class="text-center mt-4 hidden">
+          <p>Generating your resume PDF... Please wait.</p>
+        </div>
+      </div>
+
+      <!-- View: Rate Resume -->
+      <div id="rateResumeView" class="hidden section-fade-in">
+        <button onclick="showView('mainMenu')" class="mb-6 text-teal-600 hover:underline">&larr; Back</button>
+        <h2 class="text-2xl font-semibold mb-4 text-center">Get Feedback on Your Resume</h2>
+        <div class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center bg-gray-50">
+          <p class="mb-4 text-gray-500">Upload your resume (PDF format)</p>
+          <input type="file" id="resumeUpload" class="hidden" accept=".pdf">
+          <button onclick="document.getElementById('resumeUpload').click()" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700">
+            Choose File
+          </button>
+          <p id="fileName" class="mt-2 text-sm text-gray-600"></p>
+        </div>
+        <div id="rate-loader" class="text-center mt-4 hidden">
+          <p>Analyzing your resume... Please wait.</p>
+        </div>
+        <div id="feedbackResults" class="mt-8 hidden"></div>
+      </div>
+
     </div>
+  </div>
 
-<script>
-        // --- Basic JavaScript to control the UI ---
+  <script>
+    const views = ['mainMenu','createResumeView','rateResumeView'];
 
-        const views = ['mainMenu', 'createResumeView', 'rateResumeView'];
-        
-        // Function to switch between the main menu and the two feature views
-        function showView(viewId) {
-            views.forEach(id => {
-                const element = document.getElementById(id);
-                if (id === viewId) {
-                    element.classList.remove('hidden');
-                } else {
-                    element.classList.add('hidden');
-                }
-            });
-            // Clear previous results when switching views
-            document.getElementById('feedbackResults').innerHTML = '';
-            document.getElementById('feedbackResults').classList.add('hidden');
-            document.getElementById('fileName').textContent = '';
-            document.getElementById('rate-loader').classList.add('hidden');
-        }
-        
-        // --- "Rate Resume" Frontend Logic ---
-        const fileInput = document.getElementById('resumeUpload');
-        const fileNameDisplay = document.getElementById('fileName');
-        const rateLoader = document.getElementById('rate-loader');
-        const feedbackResults = document.getElementById('feedbackResults');
+    function showView(viewId) {
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (id === viewId) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+      document.getElementById('feedbackResults').innerHTML = '';
+      document.getElementById('feedbackResults').classList.add('hidden');
+      document.getElementById('fileName').textContent = '';
+      document.getElementById('rate-loader').classList.add('hidden');
+    }
 
-        fileInput.addEventListener('change', async () => {
-            if (fileInput.files.length === 0) return;
-            
-            const file = fileInput.files[0];
-            fileNameDisplay.textContent = `File selected: ${file.name}`;
-            rateLoader.classList.remove('hidden');
-            feedbackResults.classList.add('hidden');
-            feedbackResults.innerHTML = '';
+    // Resume Rating
+    const fileInput = document.getElementById('resumeUpload');
+    const fileNameDisplay = document.getElementById('fileName');
+    const rateLoader = document.getElementById('rate-loader');
+    const feedbackResults = document.getElementById('feedbackResults');
 
-            const formData = new FormData();
-            formData.append('resume', file); // 'resume' is the key our Flask backend expects
+    fileInput.addEventListener('change', async () => {
+      if (!fileInput.files.length) return;
+      const file = fileInput.files[0];
+      fileNameDisplay.textContent = `File selected: ${file.name}`;
+      rateLoader.classList.remove('hidden');
+      feedbackResults.classList.add('hidden');
+      feedbackResults.innerHTML = '';
 
-            try {
-                // This is the API call to our Flask backend
-                const response = await fetch('/resumeBuilder/rateResume', {
-                    method: 'POST',
-                    body: formData
-                });
-                const results = await response.json();
-                
-                // If there's an error from the server, display it
-                if(response.status !== 200) {
-                    throw new Error(results.error || 'Server error');
-                }
+      const formData = new FormData();
+      formData.append('resume', file);
 
-                displayFeedback(results);
-
-            } catch (error) {
-                console.error('Error rating resume:', error);
-                feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Error: ${error.message}</div>`;
-            } finally {
-                rateLoader.classList.add('hidden');
-                feedbackResults.classList.remove('hidden');
-                fileInput.value = ''; // Reset file input
-            }
+      try {
+        const response = await fetch('/resumeBuilder/rateResume', {
+          method: 'POST',
+          body: formData
         });
+        const results = await response.json();
+        if (!response.ok) throw new Error(results.error || 'Server error');
+        displayFeedback(results);
+      } catch (err) {
+        feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Error: ${err.message}</div>`;
+      } finally {
+        rateLoader.classList.add('hidden');
+        feedbackResults.classList.remove('hidden');
+        fileInput.value = '';
+      }
+    });
 
-        function displayFeedback(feedback) {
-            const renderSection = (title, content, color) => {
-                if (!content) return '';
+    function displayFeedback(feedback) {
+      const renderSection = (title, content, color) => {
+        if (!content) return '';
+        return `
+          <div class="mb-6">
+            <h3 class="text-xl font-semibold text-${color}-600 mb-3">${title}</h3>
+            <div class="prose prose-sm max-w-none text-gray-700">${content}</div>
+          </div>
+        `;
+      };
 
-                // If backend sends an HTML string, inject it as-is (no extra <ul>).
-                // If it sends an array, render a list here.
-                const bodyHtml =
-                typeof content === 'string'
-                    ? content
-                    : `<ul class="list-disc list-inside text-gray-700">
-                        ${content.map(p => `<li class="mb-1">${p}</li>`).join('')}
-                    </ul>`;
+      let html = '';
+      html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
+      html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
+      html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
+      html += renderSection('Things which can be improved:', feedback.improvements, 'red');
 
-                return `
-                <div class="mb-4">
-                    <h3 class="text-xl font-semibold text-${color}-600 mb-2">${title}</h3>
-                    <div class="text-gray-700">${bodyHtml}</div>
-                </div>
-                `;
-            };
-
-            let html = '';
-            html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
-            html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
-            html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
-            html += renderSection('Things which can be improved:', feedback.improvements, 'red');
-
-            feedbackResults.innerHTML = html;
-            }
-
-
-
-    </script>
-
-
+      feedbackResults.innerHTML = html;
+    }
+  </script>
 </body>
 </html>
