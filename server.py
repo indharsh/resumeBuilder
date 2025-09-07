@@ -47,13 +47,19 @@ def getFeedbackFromGroq(prompt, resumeData):
                     "role": "system",
                     "content": f"{systemPrompt}"
                 },
+        
                 {
                     "role": "user",
                     "content": f"{prompt}. \n \n Here is the resume data: {resumeData}"
                 }
             ],
-            max_tokens=800,
-            temperature=0.7
+            max_tokens=8192,
+            temperature=0.7,
+            max_completion_tokens=8192,
+            top_p= 0.80,
+            reasoning_effort="medium",
+            stream=True,
+            stop=None
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -114,8 +120,9 @@ def rate_resume():
 
     # If we reached this point, it means a file was uploaded
     # You can now process the file (e.g., save it, analyze it, etc.)
-
+    print(f"[DEBUG] Received file: {file.filename}, type: {type(file)}")
     pdfData = extractTextFromPDF(file)
+    print(f"[DEBUG] Extracted PDF data: {pdfData}")  # Print first 200 chars for brevity
     llm_response = getFeedbackFromGroq(userPrompt, pdfData)
     return jsonify({"review": [llm_response]}), 200
 
