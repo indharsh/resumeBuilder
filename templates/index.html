@@ -73,94 +73,197 @@
       </div>
 
       <!-- View: Rate Resume -->
-      <div id="rateResumeView" class="hidden section-fade-in">
-        <button onclick="showView('mainMenu')" class="mb-6 text-teal-600 hover:underline">&larr; Back</button>
-        <h2 class="text-2xl font-semibold mb-4 text-center">Get Feedback on Your Resume</h2>
-        <div class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-          <p class="mb-4 text-gray-500">Upload your resume (PDF format)</p>
-          <input type="file" id="resumeUpload" class="hidden" accept=".pdf">
-          <button onclick="document.getElementById('resumeUpload').click()" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700">
-            Choose File
-          </button>
-          <p id="fileName" class="mt-2 text-sm text-gray-600"></p>
+    <div id="rateResumeView" class="hidden section-fade-in">
+    <button onclick="showView('mainMenu')" class="mb-6 text-teal-600 hover:underline">&larr; Back</button>
+    <h2 class="text-2xl font-semibold mb-4 text-center">Get Feedback on Your Resume</h2>
+
+    <!-- Upload box -->
+    <div class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center bg-gray-50">
+        <p class="mb-4 text-gray-500">Upload your resume (PDF format)</p>
+        <input type="file" id="resumeUpload" class="hidden" accept=".pdf">
+        <button onclick="document.getElementById('resumeUpload').click()" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700">
+        Choose File
+        </button>
+        <p id="fileName" class="mt-2 text-sm text-gray-600"></p>
+    </div>
+
+    <!-- Prompt + Button cluster (kept together) -->
+    <div id="rateFormCluster" class="mt-6">
+        <label for="userPrompt" class="block text-sm font-medium text-gray-700">
+        Add context for the AI (optional)
+        </label>
+        <textarea
+        id="userPrompt"
+        rows="3"
+        maxlength="500"
+        class="mt-2 w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+        placeholder="Examples: role you're targeting, achievements to highlight, concerns to focus on, keywords, etc."
+        ></textarea>
+        <div class="mt-1 text-xs text-gray-500">
+        <span id="userPromptCount">0</span>/500
         </div>
-        <div id="rate-loader" class="text-center mt-4 hidden">
-          <p>Analyzing your resume... Please wait.</p>
+
+        <div class="mt-4">
+        <button
+            id="getFeedbackBtn"
+            class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+        >
+            Get Feedback
+        </button>
         </div>
-        <div id="feedbackResults" class="mt-8 hidden"></div>
-      </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="rate-loader" class="text-center mt-6 hidden">
+        <p>Analyzing your resume... Please wait.</p>
+    </div>
+
+    <!-- 🟢 Make sure this is AFTER the form cluster so results appear below everything -->
+    <div id="feedbackResults" class="mt-8 hidden"></div>
+    </div>
 
     </div>
+    
   </div>
 
   <script>
-    const views = ['mainMenu','createResumeView','rateResumeView'];
+  const views = ['mainMenu','createResumeView','rateResumeView'];
 
-    function showView(viewId) {
-      views.forEach(id => {
-        const el = document.getElementById(id);
-        if (id === viewId) el.classList.remove('hidden');
-        else el.classList.add('hidden');
-      });
-      document.getElementById('feedbackResults').innerHTML = '';
-      document.getElementById('feedbackResults').classList.add('hidden');
-      document.getElementById('fileName').textContent = '';
-      document.getElementById('rate-loader').classList.add('hidden');
-    }
-
-    // Resume Rating
-    const fileInput = document.getElementById('resumeUpload');
-    const fileNameDisplay = document.getElementById('fileName');
-    const rateLoader = document.getElementById('rate-loader');
-    const feedbackResults = document.getElementById('feedbackResults');
-
-    fileInput.addEventListener('change', async () => {
-      if (!fileInput.files.length) return;
-      const file = fileInput.files[0];
-      fileNameDisplay.textContent = `File selected: ${file.name}`;
-      rateLoader.classList.remove('hidden');
-      feedbackResults.classList.add('hidden');
-      feedbackResults.innerHTML = '';
-
-      const formData = new FormData();
-      formData.append('resume', file);
-
-      try {
-        const response = await fetch('/resumeBuilder/rateResume', {
-          method: 'POST',
-          body: formData
-        });
-        const results = await response.json();
-        if (!response.ok) throw new Error(results.error || 'Server error');
-        displayFeedback(results);
-      } catch (err) {
-        feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Error: ${err.message}</div>`;
-      } finally {
-        rateLoader.classList.add('hidden');
-        feedbackResults.classList.remove('hidden');
-        fileInput.value = '';
-      }
+  function showView(viewId) {
+    views.forEach(id => {
+      const el = document.getElementById(id);
+      if (id === viewId) el.classList.remove('hidden');
+      else el.classList.add('hidden');
     });
+    document.getElementById('feedbackResults').innerHTML = '';
+    document.getElementById('feedbackResults').classList.add('hidden');
+    document.getElementById('fileName').textContent = '';
+    document.getElementById('rate-loader').classList.add('hidden');
 
-    function displayFeedback(feedback) {
-      const renderSection = (title, content, color) => {
-        if (!content) return '';
-        return `
-          <div class="mb-6">
-            <h3 class="text-xl font-semibold text-${color}-600 mb-3">${title}</h3>
-            <div class="prose prose-sm max-w-none text-gray-700">${content}</div>
-          </div>
-        `;
-      };
+    const up = document.getElementById('userPrompt');
+    if (up) { up.value = ''; }
+    const upCount = document.getElementById('userPromptCount');
+    if (upCount) upCount.textContent = '0';
 
-      let html = '';
-      html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
-      html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
-      html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
-      html += renderSection('Things which can be improved:', feedback.improvements, 'red');
+    const btn = document.getElementById('getFeedbackBtn');
+    if (btn) btn.disabled = true;
 
-      feedbackResults.innerHTML = html;
+    // clear any chosen file
+    const fileInput = document.getElementById('resumeUpload');
+    if (fileInput) fileInput.value = '';
+    selectedFile = null;
+  }
+
+  // ===== Resume Rating =====
+  const fileInput = document.getElementById('resumeUpload');
+  const fileNameDisplay = document.getElementById('fileName');
+  const rateLoader = document.getElementById('rate-loader');
+  const feedbackResults = document.getElementById('feedbackResults');
+  const userPromptInput = document.getElementById('userPrompt');
+  const userPromptCount = document.getElementById('userPromptCount');
+  const getFeedbackBtn = document.getElementById('getFeedbackBtn');
+
+  let selectedFile = null;
+  let submitting = false;
+
+  // live character counter
+  if (userPromptInput && userPromptCount) {
+    userPromptInput.addEventListener('input', () => {
+      userPromptCount.textContent = userPromptInput.value.length.toString();
+    });
+  }
+
+  // On file choose: just remember the file & enable button (no API call)
+  fileInput.addEventListener('change', () => {
+    if (!fileInput.files.length) {
+      selectedFile = null;
+      fileNameDisplay.textContent = '';
+      getFeedbackBtn.disabled = true;
+      return;
     }
-  </script>
+    const file = fileInput.files[0];
+
+    // optional: enforce PDF
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      selectedFile = null;
+      fileInput.value = '';
+      fileNameDisplay.textContent = '';
+      getFeedbackBtn.disabled = true;
+      feedbackResults.classList.remove('hidden');
+      feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Please upload a PDF file.</div>`;
+      return;
+    }
+
+    selectedFile = file;
+    fileNameDisplay.textContent = `File selected: ${file.name}`;
+    getFeedbackBtn.disabled = false;
+  });
+
+  // On button click: make the API call
+  getFeedbackBtn.addEventListener('click', async () => {
+    if (submitting) return; // prevent double-clicks
+    if (!selectedFile) {
+      feedbackResults.classList.remove('hidden');
+      feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Please choose a PDF before requesting feedback.</div>`;
+      return;
+    }
+
+    submitting = true;
+    getFeedbackBtn.disabled = true;
+    rateLoader.classList.remove('hidden');
+    feedbackResults.classList.add('hidden');
+    feedbackResults.innerHTML = '';
+
+    const formData = new FormData();
+    formData.append('resume', selectedFile);
+    formData.append('userPrompt', (userPromptInput?.value || '').trim());
+
+    try {
+      const response = await fetch('/resumeBuilder/rateResume', {
+        method: 'POST',
+        body: formData
+      });
+      const results = await response.json();
+      if (!response.ok) throw new Error(results.error || 'Server error');
+      displayFeedback(results);
+    } catch (err) {
+      feedbackResults.innerHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800">Error: ${err.message}</div>`;
+    } finally {
+      rateLoader.classList.add('hidden');
+      feedbackResults.classList.remove('hidden');
+      submitting = false;
+      getFeedbackBtn.disabled = false; // keep enabled so they can resubmit with same file/prompt
+    }
+  });
+
+  function displayFeedback(feedback) {
+  const renderSection = (title, content, color) => {
+    if (!content) return '';
+    return `
+      <div class="mb-6">
+        <h3 class="text-xl font-semibold text-${color}-600 mb-3">${title}</h3>
+        <div class="prose prose-sm max-w-none text-gray-700">${content}</div>
+      </div>
+    `;
+  };
+
+  let html = '';
+  html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
+  html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
+  html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
+  html += renderSection('Things which can be improved:', feedback.improvements, 'red');
+
+  const feedbackResults = document.getElementById('feedbackResults');
+  feedbackResults.innerHTML = html;
+  feedbackResults.classList.remove('hidden');
+
+  // Smoothly scroll to results (optional)
+  feedbackResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+</script>
+
+
 </body>
 </html>
