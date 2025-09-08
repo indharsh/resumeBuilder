@@ -39,10 +39,7 @@ def extractTextFromPDF(file):
 def getFeedbackFromGroq(prompt, resumeData):
     with open ('system_prompt.txt', 'r') as file:
         systemPrompt = file.read()
-    try:
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
+    llmMessages = [
                 {
                     "role": "system",
                     "content": f"{systemPrompt}"
@@ -52,7 +49,12 @@ def getFeedbackFromGroq(prompt, resumeData):
                     "role": "user",
                     "content": f"{prompt}. \n \n Here is the resume data: {resumeData}"
                 }
-            ],
+            ]
+    print(f"[DEBUG] LLM Messages: {llmMessages}")
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=llmMessages,
             max_tokens=8192,
             temperature=0.7,
             max_completion_tokens=8192,
@@ -115,6 +117,7 @@ def rate_resume():
 
     file = request.files['resume']
     userPrompt = request.form.get('userPrompt', '')
+    print(f"[DEBUG] User Prompt: {userPrompt}")
 
     # Check if the user selected a file
     if file.filename == '':
@@ -125,7 +128,7 @@ def rate_resume():
     print(f"[DEBUG] Received file: {file.filename}, type: {type(file)}")
     pdfData = extractTextFromPDF(file)
     llm_response = getFeedbackFromGroq(userPrompt, pdfData)
-    print(f"[DEBUG] LLM Response: {llm_response}")
+    print(f"[DEBUG] LLM Response message content: {llm_response}")
     llm_response = json.loads(llm_response)
     return jsonify({"summary": [llm_response['summary']], "veryGoodReview": [llm_response['veryGoodReview']], "moderateReview": [llm_response['moderateReview']], "improvements": [llm_response['improvements']] }), 200
 
