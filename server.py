@@ -69,6 +69,34 @@ def getFeedbackFromGroq(prompt, resumeData):
         print(f"Error getting feedback from Groq: {e}")
         return {"error": "Failed to get feedback from Groq."}  
 
+def improveResume(options):
+    with open ('system_prompt_to_improve.txt', 'r') as file:
+        systemPrompt = file.read()
+    llmMessages=[{
+        'role':'system',
+        'content':f'{systemPrompt}'
+    },
+    {
+        'role':'user',
+        'content':f'{options}'
+    }]
+    
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=llmMessages,
+            max_tokens=8192,
+            temperature=0.7,
+            top_p= 0.80,
+            reasoning_effort="high",
+            stop = None
+        )
+        print(f"[DEBUG] Groq response: {response}")
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Error getting response from Groq: {e}")
+        return {"error": "Failed to get response from Groq."}
+
 
 
 # Define a route for the root URL ('/')
@@ -131,6 +159,28 @@ def rate_resume():
     print(f"[DEBUG] LLM Response message content: {llm_response}")
     llm_response = json.loads(llm_response)
     return jsonify({"summary": [llm_response['summary']], "veryGoodReview": [llm_response['veryGoodReview']], "moderateReview": [llm_response['moderateReview']], "improvements": [llm_response['improvements']] }), 200
+
+
+@app.route('/resumeBuilder/improveResume', methods=['POST'])
+def improve_resume():
+    """""
+    This route/API will handle the improvement of an existing resume.
+    """""
+    improveOptions = json.loads(request.form.get('options', ''))
+    oldResume = request.files['resume']
+    oldResume = extractTextFromPDF(oldResume)
+    print(f"[DEBUG] Old Resume Text: {oldResume}")
+    improveOptions['oldResume'] = oldResume
+    print(f"[DEBUG] Improve Options: {improveOptions}")
+    llm_response = improveResume(improveOptions)
+    print(f"[DEBUG] LLM Response for updated resume: {llm_response}")
+
+
+
+
+
+
+
 
 
 # This is a standard Python construct. 

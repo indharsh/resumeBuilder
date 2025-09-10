@@ -122,6 +122,88 @@
     <!-- 🟢 Make sure this is AFTER the form cluster so results appear below everything -->
     <div id="feedbackResults" class="mt-8 hidden"></div>
     </div>
+    
+    <!-- Improve Resume Options (appears after feedback) -->
+    <div id="improveOptions" class="mt-8 hidden">
+    <h3 class="text-xl font-semibold text-teal-700 mb-3">Improve & Download Your Resume</h3>
+    <p class="text-gray-600 mb-4">Choose what the AI should modify and how the final resume should look.</p>
+
+    <!-- What to modify -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+        <h4 class="font-medium text-gray-800 mb-2">What should be rewritten?</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="flex items-center gap-2">
+            <input id="opt_summary" type="checkbox" class="h-4 w-4 text-teal-600 border-gray-300 rounded">
+            <span>Professional Summary</span>
+        </label>
+        <label class="flex items-center gap-2">
+            <input id="opt_experience" type="checkbox" class="h-4 w-4 text-teal-600 border-gray-300 rounded">
+            <span>Experience Bullets (STAR / impact)</span>
+        </label>
+        <label class="flex items-center gap-2">
+            <input id="opt_skills" type="checkbox" class="h-4 w-4 text-teal-600 border-gray-300 rounded">
+            <span>Skills Section (ATS-friendly)</span>
+        </label>
+        <label class="flex items-center gap-2">
+            <input id="opt_formatting" type="checkbox" class="h-4 w-4 text-teal-600 border-gray-300 rounded">
+            <span>Layout & Formatting</span>
+        </label>
+        </div>
+    </div>
+
+    <!-- Style / Tone / Template -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <h4 class="font-medium text-gray-800 mb-2">Tone</h4>
+            <select id="tone" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="professional" selected>Professional</option>
+            <option value="confident">Confident</option>
+            <option value="concise">Concise</option>
+            <option value="impactful">Impactful</option>
+            </select>
+        </div>
+        <div>
+            <h4 class="font-medium text-gray-800 mb-2">Template</h4>
+            <select id="template" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="modern" selected>Modern</option>
+            <option value="classic">Classic</option>
+            <option value="minimal">Minimal</option>
+            <option value="ats">ATS-Optimized</option>
+            </select>
+        </div>
+        <div>
+            <h4 class="font-medium text-gray-800 mb-2">Target Seniority</h4>
+            <select id="seniority" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="auto" selected>Auto-detect</option>
+            <option value="intern">Intern / Entry</option>
+            <option value="mid">Mid-Level</option>
+            <option value="senior">Senior</option>
+            <option value="lead">Lead / Manager</option>
+            </select>
+        </div>
+        </div>
+    </div>
+
+    <!-- Extra targeting (optional) -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+        <h4 class="font-medium text-gray-800 mb-2">Target Role (optional)</h4>
+        <input id="targetRole" type="text" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder="e.g., Senior Data Analyst at fintech, frontend role with React/Next.js focus" />
+    </div>
+
+    <!-- Generate button -->
+    <div class="flex items-center gap-3">
+        <button
+        id="generateImprovedBtn"
+        class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+        Improve & Download PDF
+        </button>
+        <span id="generateStatus" class="text-sm text-gray-500"></span>
+    </div>
+    </div>
+        
 
     </div>
     
@@ -258,9 +340,117 @@
   feedbackResults.innerHTML = html;
   feedbackResults.classList.remove('hidden');
 
+  // reveal Improve section
+  const improveOptions = document.getElementById('improveOptions');
+  if (improveOptions) improveOptions.classList.remove('hidden');
+
   // Smoothly scroll to results (optional)
   feedbackResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+ }
+
+    // Elements
+    const improveOptions = document.getElementById('improveOptions');
+    const generateBtn = document.getElementById('generateImprovedBtn');
+    const generateStatus = document.getElementById('generateStatus');
+
+    // Option inputs
+    const chkSummary = document.getElementById('opt_summary');
+    const chkExperience = document.getElementById('opt_experience');
+    const chkSkills = document.getElementById('opt_skills');
+    const chkFormatting = document.getElementById('opt_formatting');
+    const selTone = document.getElementById('tone');
+    const selTemplate = document.getElementById('template');
+    const selSeniority = document.getElementById('seniority');
+    const inputTargetRole = document.getElementById('targetRole');
+
+    // Helper to collect options
+    function getImproveOptions() {
+    return {
+        rewrite: {
+        summary: !!chkSummary?.checked,
+        experience: !!chkExperience?.checked,
+        skills: !!chkSkills?.checked,
+        formatting: !!chkFormatting?.checked,
+        },
+        tone: selTone?.value || 'professional',
+        template: selTemplate?.value || 'modern',
+        seniority: selSeniority?.value || 'auto',
+        targetRole: (inputTargetRole?.value || '').trim(),
+        userPrompt: (userPromptInput?.value || '').trim(), // include the prompt for extra context
+    };
+    }
+
+    // Download helper (handles both blob and url JSON)
+    async function handlePdfResponse(response) {
+    const ct = response.headers.get('Content-Type') || '';
+    if (ct.includes('application/pdf')) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        // try to name based on original file
+        const base = (selectedFile?.name || 'resume').replace(/\.pdf$/i, '');
+        a.download = `${base}-improved.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        return;
+    }
+    // Fallback: maybe backend sends JSON with { pdfUrl }
+    const data = await response.json();
+    if (data?.pdfUrl) {
+        const a = document.createElement('a');
+        a.href = data.pdfUrl;
+        a.download = data.fileName || 'resume-improved.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+    }
+    throw new Error('Unexpected response format from server');
+    }
+
+    if (generateBtn) {
+    generateBtn.addEventListener('click', async () => {
+        if (!selectedFile) {
+        generateStatus.textContent = 'Please upload a PDF and get feedback first.';
+        return;
+        }
+        generateBtn.disabled = true;
+        generateStatus.textContent = 'Generating improved PDF...';
+
+        const opts = getImproveOptions();
+
+        // Build payload: include original resume + options
+        const formData = new FormData();
+        formData.append('resume', selectedFile);                // original file
+        formData.append('options', JSON.stringify(opts));       // all user choices as JSON
+
+        try {
+        // 🔧 Set your endpoint here (you’ll implement it)
+        const response = await fetch('/resumeBuilder/improveResume', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            // try to surface error message from JSON if available
+            let errMsg = 'Server error';
+            try { const ejson = await response.json(); errMsg = ejson.error || errMsg; } catch(_) {}
+            throw new Error(errMsg);
+        }
+
+        await handlePdfResponse(response);
+        generateStatus.textContent = 'Done! Your improved PDF has been downloaded.';
+        } catch (err) {
+        generateStatus.textContent = `Error: ${err.message}`;
+        } finally {
+        generateBtn.disabled = false;
+        setTimeout(() => { generateStatus.textContent = ''; }, 4000);
+        }
+    });
+    }
 
 </script>
 
