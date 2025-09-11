@@ -126,12 +126,13 @@ def createPdfFromMarkdown(markdownText, output_file_path):
     markdownFilePath = os.path.join('downloads', 'temp_resume.md')
     with open (markdownFilePath, 'w') as f:
         f.write(markdownText)
+    print(f"[DEBUG] Created temporary markdown file at: {markdownFilePath}")
     command = ["pandoc",
-        markdownFilePath, # Name of the temporary markdown file
+        markdownFilePath, # Name/location of the temporary markdown file
         "--pdf-engine=xelatex", # A good default for handling fonts
         "-V", "geometry:margin=1in", # Sets 1-inch margins
         "-o",
-        output_file_path]  # Output file name
+        output_file_path]  # Output file name/location
 
     print(f"[DEBUG] Running command: {' '.join(command)}")
     try:
@@ -228,10 +229,10 @@ def improve_resume():
     markdownText = extractJsonFromResponse(markdownText)
     print(f"[DEBUG] Extracted Markdown Text: {markdownText}")
     file_name = f"improved_resume_{int(time.time())}.pdf"
-    filePath = os.path.join('/downloads', file_name)
+    filePath = os.path.join('downloads', file_name)
     createdFilePath = createPdfFromMarkdown(markdownText, filePath)
     if createdFilePath:
-        return send_from_directory(directory='downloads', path=file_name, as_attachment=True)
+        return send_from_directory(directory='downloads', path=file_name, as_attachment=True, download_name=file_name)
     else:
         return jsonify({"error": "Failed to create PDF."}), 500
 
