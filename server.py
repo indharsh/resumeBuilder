@@ -5,6 +5,10 @@ import os
 import PyPDF2
 from groq import Groq
 import json
+import subprocess
+import tkinter as tk
+from tkinter import filedialog
+import re
 
 # Load environment variables from a .env file if present
 load_dotenv()  
@@ -88,17 +92,62 @@ def improveResume(options):
             max_tokens=8192,
             temperature=0.7,
             top_p= 0.80,
-            reasoning_effort="high",
-            stop = None
+            response_format={"type": "json_object"},
+            stop = None,
+            tool_choice = 'none',
         )
         print(f"[DEBUG] Groq response: {response}")
         return response.choices[0].message.content
     except Exception as e:
         print(f"Error getting response from Groq: {e}")
         return {"error": "Failed to get response from Groq."}
+    
+
+def extractJsonFromResponse(response_text):
+    """
+    Extracts a JSON object from a string that might be wrapped
+    in Markdown code blocks.
+    """
+    # Find the JSON block using a regular expression
+    # This looks for ```json ... ``` or ``` ... ```
+    match = re.search(r"```(json)?\s*({.*})\s*```", response_text, re.DOTALL)
+    
+    if match:
+        # If a match is found, return the captured JSON part
+        return match.group(2)
+    else:
+        # If no markdown block is found, assume the text is raw JSON
+        return response_text.strip()
 
 
 
+def createPdfFromMarkdown(markdownText, output_file_path):
+    # Create a temporary markdown file
+    markdownFilePath = os.path.join('downloads', 'temp_resume.md')
+    with open (markdownFilePath, 'w') as f:
+        f.write(markdownText)
+    command = ["pandoc",
+        markdownFilePath, # Name of the temporary markdown file
+        "--pdf-engine=xelatex", # A good default for handling fonts
+        "-V", "geometry:margin=1in", # Sets 1-inch margins
+        "-o",
+        output_file_path]  # Output file name
+
+    print(f"[DEBUG] Running command: {' '.join(command)}")
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+        print(f"[DEBUG] PDF created successfully: {output_file_path}")
+        return output_file_path
+    except subprocess.CalledProcessError as e:
+        print(f"Error creating PDF: {e}")
+        return {"error": "Failed to create PDF."}
+    finally:
+        # Clean up temporary markdown file
+        if os.path.exists(markdownFilePath):
+            os.remove(markdownFilePath)
+    return True
+    
+# Flask routes
 # Define a route for the root URL ('/')
 @app.route('/')
 def index():
@@ -174,13 +223,17 @@ def improve_resume():
     print(f"[DEBUG] Improve Options: {improveOptions}")
     llm_response = improveResume(improveOptions)
     print(f"[DEBUG] LLM Response for updated resume: {llm_response}")
-
-
-
-
-
-
-
+    llm_response = json.loads(llm_response)
+    markdownText = llm_response['improvedResume']
+    markdownText = extractJsonFromResponse(markdownText)
+    print(f"[DEBUG] Extracted Markdown Text: {markdownText}")
+    file_name = f"improved_resume_{int(time.time())}.pdf"
+    filePath = os.path.join('/downloads', file_name)
+    createdFilePath = createPdfFromMarkdown(markdownText, filePath)
+    if createdFilePath:
+        return send_from_directory(directory='downloads', path=file_name, as_attachment=True)
+    else:
+        return jsonify({"error": "Failed to create PDF."}), 500
 
 
 # This is a standard Python construct. 

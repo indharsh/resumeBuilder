@@ -1,2 +1,4 @@
 /resumeBuilder
 .env
+/downloads
+.DS_Store
