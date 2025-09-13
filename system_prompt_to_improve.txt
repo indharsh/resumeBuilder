@@ -64,12 +64,12 @@ You will receive the input in the form of a JSON object. You must parse the `rew
 
 [OUTPUT REQUIREMENTS]
 Your final response MUST BE ONLY a JSON code block and nothing else. Do not include any text, conversation, or explanations before or after the code block. The JSON inside the code block must be valid and contain exactly two keys: improvedResume and changeSummary.
+'improvedResume' key should have the updated resume content as a single string formatted in Markdown. Use '#' for the name, '##' for section headers like 'Experience' and 'Education', bold for job titles, italics for company names, and unordered lists for responsibilities.
+'changeSummary' key should have the summary of changes that you have done.
 
 Example of Final Raw Output:
 
-```json
 {
-  "improvedResume": "John Doe\nAI Engineer | (123) 456-7890 | john.doe@email.com\n\nSummary\nA results-driven AI Engineer with mid-level experience...",
-  "changeSummary": "The professional summary was rewritten to adopt a more professional tone and align with the target role of an AI Engineer."
+  "improvedResume": "# JANE DOE\n+1 (555) 123-4567 | jane.doe@email.com | https://linkedin.com/in/janedoe\n\n## PROFESSIONAL SUMMARY\nResults-driven Senior Software Engineer with over 15 years of experience architecting, developing, and deploying scalable web applications. Adept at leading complex projects, mentoring engineering teams, and collaborating with cross-functional units to deliver high-quality software solutions.\n\n## SKILLS\n* **Languages:** Python, JavaScript, SQL, PHP\n* **Frameworks:** Django, React, Node.js\n* **Databases:** PostgreSQL, MongoDB, Redis, MySQL\n* **DevOps:** AWS, Docker, Jenkins, CI/CD\n\n## PROFESSIONAL EXPERIENCE\n\n**Senior Software Engineer**\n*Tech Solutions Inc.* | Jan 2022 - Present\n* Spearheaded the development of a microservices-based architecture, enhancing system scalability by 40%.\n* Engineered a real-time data processing pipeline utilizing Kafka and Spark, reducing data latency by 75%.\n* Mentored a team of 4 junior engineers, establishing best practices in code quality and testing.\n\n**Software Engineer**\n*Innovate Corp.* | Jun 2019 - Dec 2021\n* Drove the development and maintenance of key features for a large-scale SaaS platform using Django and React.\n* Optimized database queries and implemented advanced caching strategies, boosting application performance by 30%.\n\n**Backend Developer**\n*Data Systems LLC* | Aug 2017 - May 2019\n* Architected and managed RESTful APIs for a client-facing analytics dashboard, serving thousands of daily users.\n* Oversaw database migrations and schema designs for a large-scale PostgreSQL database.\n\n**Junior Developer**\n*Web Widgets Co.* | Jul 2015 - Aug 2017\n* Contributed to the full-stack development of e-commerce websites using PHP and MySQL.\n* Translated complex UI/UX design wireframes into responsive and functional front-end code.\n\n## EDUCATION\n\n**B.S. in Computer Science**\n*State University* | 2015 - 2019",
+  "changeSummary": "The LinkedIn URL was corrected to a direct, functional link. The professional summary and experience descriptions were rewritten with stronger, more dynamic action verbs to better highlight achievements. Formatting was adjusted for improved consistency and readability."
 }
-```
