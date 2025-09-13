@@ -24,16 +24,13 @@
   <div class="container mx-auto p-4 max-w-4xl">
     <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
       
-      <!-- Header Section -->
       <header class="text-center mb-10">
         <h1 class="text-4xl font-bold text-gray-900">AI Resume Assistant</h1>
         <p class="text-gray-500 mt-2">Create a professional resume with AI or get feedback on your existing one.</p>
       </header>
 
-      <!-- Main Menu -->
       <main id="mainMenu" class="text-center section-fade-in">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Create Resume -->
           <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
             <h2 class="text-2xl font-semibold mb-3 text-indigo-600">Create Your Resume</h2>
             <p class="text-gray-600 mb-6">Answer a few questions and let AI craft a tailored resume for you.</p>
@@ -41,7 +38,6 @@
               Get Started
             </button>
           </div>
-          <!-- Rate Resume -->
           <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
             <h2 class="text-2xl font-semibold mb-3 text-teal-600">Rate Your Resume</h2>
             <p class="text-gray-600 mb-6">Upload your resume to get detailed feedback & suggestions for improvement.</p>
@@ -52,7 +48,6 @@
         </div>
       </main>
 
-      <!-- View: Create Resume -->
       <div id="createResumeView" class="hidden section-fade-in">
         <button onclick="showView('mainMenu')" class="mb-6 text-indigo-600 hover:underline">&larr; Back</button>
         <h2 class="text-2xl font-semibold mb-4 text-center">Resume Creation Chat</h2>
@@ -72,12 +67,10 @@
         </div>
       </div>
 
-      <!-- View: Rate Resume -->
-    <div id="rateResumeView" class="hidden section-fade-in">
+      <div id="rateResumeView" class="hidden section-fade-in">
     <button onclick="showView('mainMenu')" class="mb-6 text-teal-600 hover:underline">&larr; Back</button>
     <h2 class="text-2xl font-semibold mb-4 text-center">Get Feedback on Your Resume</h2>
 
-    <!-- Upload box -->
     <div class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center bg-gray-50">
         <p class="mb-4 text-gray-500">Upload your resume (PDF format)</p>
         <input type="file" id="resumeUpload" class="hidden" accept=".pdf">
@@ -87,7 +80,6 @@
         <p id="fileName" class="mt-2 text-sm text-gray-600"></p>
     </div>
 
-    <!-- Prompt + Button cluster (kept together) -->
     <div id="rateFormCluster" class="mt-6">
         <label for="userPrompt" class="block text-sm font-medium text-gray-700">
         Add context for the AI (optional)
@@ -114,21 +106,17 @@
         </div>
     </div>
 
-    <!-- Loader -->
     <div id="rate-loader" class="text-center mt-6 hidden">
         <p>Analyzing your resume... Please wait.</p>
     </div>
 
-    <!-- 🟢 Make sure this is AFTER the form cluster so results appear below everything -->
     <div id="feedbackResults" class="mt-8 hidden"></div>
     </div>
     
-    <!-- Improve Resume Options (appears after feedback) -->
     <div id="improveOptions" class="mt-8 hidden">
     <h3 class="text-xl font-semibold text-teal-700 mb-3">Improve & Download Your Resume</h3>
     <p class="text-gray-600 mb-4">Choose what the AI should modify and how the final resume should look.</p>
 
-    <!-- What to modify -->
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
         <h4 class="font-medium text-gray-800 mb-2">What should be rewritten?</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -151,7 +139,6 @@
         </div>
     </div>
 
-    <!-- Style / Tone / Template -->
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -183,14 +170,12 @@
         </div>
     </div>
 
-    <!-- Extra targeting (optional) -->
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
         <h4 class="font-medium text-gray-800 mb-2">Target Role (optional)</h4>
         <input id="targetRole" type="text" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
             placeholder="e.g., Senior Data Analyst at fintech, frontend role with React/Next.js focus" />
     </div>
 
-    <!-- Generate button -->
     <div class="flex items-center gap-3">
         <button
         id="generateImprovedBtn"
@@ -208,18 +193,28 @@
   </div>
 
   <script>
-  const views = ['mainMenu','createResumeView','rateResumeView'];
+  // ✅ CHANGE 1: Add 'improveOptions' to the list of views to manage.
+  const views = ['mainMenu','createResumeView','rateResumeView', 'improveOptions'];
 
   function showView(viewId) {
+    // This loop will now correctly hide 'improveOptions' when switching to another view.
     views.forEach(id => {
       const el = document.getElementById(id);
       if (id === viewId) el.classList.remove('hidden');
       else el.classList.add('hidden');
     });
+
+    // --- State Reset Logic ---
+    // Clear previous results and file names when switching views
     document.getElementById('feedbackResults').innerHTML = '';
     document.getElementById('feedbackResults').classList.add('hidden');
     document.getElementById('fileName').textContent = '';
     document.getElementById('rate-loader').classList.add('hidden');
+    
+    // ✅ CHANGE 2: Also reset the status message from the "Improve" section.
+    const genStatus = document.getElementById('generateStatus');
+    if (genStatus) genStatus.textContent = '';
+
 
     const up = document.getElementById('userPrompt');
     if (up) { up.value = ''; }
@@ -229,7 +224,7 @@
     const btn = document.getElementById('getFeedbackBtn');
     if (btn) btn.disabled = true;
 
-    // clear any chosen file
+    // Clear any chosen file from the input
     const fileInput = document.getElementById('resumeUpload');
     if (fileInput) fileInput.value = '';
     selectedFile = null;
@@ -320,19 +315,23 @@
   function displayFeedback(feedback) {
   const renderSection = (title, content, color) => {
     if (!content) return '';
+    // A simple function to format the content as list items
+    const formatAsList = (text) => {
+        return `<ul>` + text.map(item => `<li>${item}</li>`).join('') + `</ul>`;
+    }
     return `
       <div class="mb-6">
         <h3 class="text-xl font-semibold text-${color}-600 mb-3">${title}</h3>
-        <div class="prose prose-sm max-w-none text-gray-700">${content}</div>
+        <div class="prose prose-sm max-w-none text-gray-700">${formatAsList(content)}</div>
       </div>
     `;
   };
 
   let html = '';
-  html += renderSection('Here is the feedback for your resume:', feedback.summary, 'blue');
-  html += renderSection('Strength of your resume:', feedback.veryGoodReview, 'green');
-  html += renderSection('Good things about your resume:', feedback.moderateReview, 'yellow');
-  html += renderSection('Things which can be improved:', feedback.improvements, 'red');
+  html += renderSection('Summary of Feedback:', feedback.summary, 'blue');
+  html += renderSection('Strengths:', feedback.veryGoodReview, 'green');
+  html += renderSection('Areas to Watch:', feedback.moderateReview, 'yellow');
+  html += renderSection('Suggestions for Improvement:', feedback.improvements, 'red');
 
   const feedbackResults = document.getElementById('feedbackResults');
   feedbackResults.innerHTML = html;
@@ -378,35 +377,18 @@
     };
     }
 
-    // Download helper (handles both blob and url JSON)
+    // Download helper (handles PDF blob response)
     async function handlePdfResponse(response) {
-    const ct = response.headers.get('Content-Type') || '';
-    if (ct.includes('application/pdf')) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        // try to name based on original file
-        const base = (selectedFile?.name || 'resume').replace(/\.pdf$/i, '');
-        a.download = `${base}-improved.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        return;
-    }
-    // Fallback: maybe backend sends JSON with { pdfUrl }
-    const data = await response.json();
-    if (data?.pdfUrl) {
-        const a = document.createElement('a');
-        a.href = data.pdfUrl;
-        a.download = data.fileName || 'resume-improved.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        return;
-    }
-    throw new Error('Unexpected response format from server');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const base = (selectedFile?.name || 'resume').replace(/\.pdf$/i, '');
+      a.download = `${base}-improved.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     }
 
     if (generateBtn) {
@@ -420,25 +402,23 @@
 
         const opts = getImproveOptions();
 
-        // Build payload: include original resume + options
         const formData = new FormData();
-        formData.append('resume', selectedFile);                // original file
-        formData.append('options', JSON.stringify(opts));       // all user choices as JSON
+        formData.append('resume', selectedFile);
+        formData.append('options', JSON.stringify(opts));
 
         try {
-        // 🔧 Set your endpoint here (you’ll implement it)
         const response = await fetch('/resumeBuilder/improveResume', {
             method: 'POST',
             body: formData
         });
 
         if (!response.ok) {
-            // try to surface error message from JSON if available
             let errMsg = 'Server error';
             try { const ejson = await response.json(); errMsg = ejson.error || errMsg; } catch(_) {}
             throw new Error(errMsg);
         }
 
+        // Assuming the backend sends a direct PDF file as the response
         await handlePdfResponse(response);
         generateStatus.textContent = 'Done! Your improved PDF has been downloaded.';
         } catch (err) {
